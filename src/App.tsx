@@ -9,8 +9,9 @@ import {
   ScheduleEntry,
   StorageFolder
 } from './types';
-import { SYSTEM_SMART_FOLDERS } from './data/initialData';
+import { SYSTEM_SMART_FOLDERS, INITIAL_DOCUMENTS } from './data/initialData';
 import { storageService } from './services/storageService';
+import { gasStorageService } from './services/gasStorageService';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { FilterBar } from './components/FilterBar';
@@ -48,6 +49,8 @@ import {
   ArrowLeft,
   ChevronRight,
   ExternalLink,
+  RefreshCw,
+  AlertTriangle,
 } from 'lucide-react';
 
 export default function App() {
@@ -64,6 +67,46 @@ export default function App() {
   const [lastSyncedAt, setLastSyncedAt] = useState<string>('');
   const [isOffline, setIsOffline] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isGasInitialLoading, setIsGasInitialLoading] = useState<boolean>(true);
+  const [gasError, setGasError] = useState<string | null>(null);
+
+  // Subscribe to gasStorageService state changes
+  useEffect(() => {
+    const unsub = gasStorageService.subscribe((state) => {
+      setIsSyncing(state.isLoading || state.isSaving);
+      setGasError(state.error);
+      if (state.lastSyncedAt) {
+        setLastSyncedAt(state.lastSyncedAt);
+      }
+    });
+    return unsub;
+  }, []);
+
+  const loadDocumentsFromGas = async (isInitial: boolean = false) => {
+    if (isInitial) setIsGasInitialLoading(true);
+    setGasError(null);
+    try {
+      const res = await storageService.syncWithGas();
+      if (Array.isArray(res.documents)) {
+        setDocuments(res.documents);
+      }
+      if (Array.isArray(res.folders) && res.folders.length > 0) {
+        setStorageFolders(res.folders);
+      }
+      setLastSyncedAt(new Date().toISOString());
+      setIsOffline(false);
+    } catch (err: any) {
+      console.warn('Google Apps Script GET error:', err);
+      setGasError(err.message || 'Error al conectar con la API de Google Apps Script');
+      // If error occurs, fallback to local storage so user is never blocked
+      const fallbackDocs = storageService.getDocuments();
+      if (fallbackDocs.length > 0) {
+        setDocuments(fallbackDocs);
+      }
+    } finally {
+      if (isInitial) setIsGasInitialLoading(false);
+    }
+  };
 
   // --- UI Controls State ---
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -167,6 +210,9 @@ export default function App() {
     if (activeT?.role === 'director' || activeT?.username.toLowerCase() === 'directora') {
       setCurrentView('admin');
     }
+
+    // Petición inicial a Google Apps Script para obtener documentos actualizados
+    loadDocumentsFromGas(true);
 
     // Auto-sync with cross-device backend server
     const runServerSync = () => {
@@ -448,21 +494,24 @@ export default function App() {
     showToast(`Cuenta "${teacher.username}" creada con éxito.`);
   };
 
-  // Handle manual sync
+  // Handle manual sync with Google Apps Script
   const handleTriggerSync = async () => {
-    if (isOffline) {
-      showToast('No se puede sincronizar en Modo Sin Conexión.');
-      return;
-    }
+    showToast('Consultando documentos actualizados en Google Apps Script...');
+    await loadDocumentsFromGas(false);
+    showToast('Sincronización con Google Apps Script completada.');
+  };
+
+  // Helper para inicializar Google Apps Script con los documentos de prueba si está vacío
+  const handleLoadSampleDocuments = async () => {
     setIsSyncing(true);
+    showToast('Cargando y sincronizando documentos base con Google Apps Script...');
     try {
-      const res = await storageService.triggerSync();
-      setLastSyncedAt(new Date().toISOString());
-      setSyncLogs(storageService.getSyncLogs());
-      setDocuments(storageService.getDocuments());
-      showToast(res.message);
+      localStorage.setItem('docudocente_documents_v1', JSON.stringify(INITIAL_DOCUMENTS));
+      setDocuments(INITIAL_DOCUMENTS);
+      await storageService.pushAllDataToGas();
+      showToast('¡Documentos base sincronizados exitosamente en Google Apps Script!');
     } catch (err: any) {
-      showToast(err.message || 'Error al sincronizar.');
+      showToast('Error al sincronizar con Google Apps Script: ' + err.message);
     } finally {
       setIsSyncing(false);
     }
@@ -953,6 +1002,7 @@ export default function App() {
         onTriggerSync={handleTriggerSync}
         isOffline={isOffline}
         lastSyncedAt={lastSyncedAt}
+        gasError={gasError}
       />
 
       {/* Main Workspace Layout */}
@@ -1164,37 +1214,100 @@ export default function App() {
 
           {/* Document Content List / Grid */}
           <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
-            {filteredDocuments.length === 0 ? (
+            {gasError && (
+              <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between text-xs text-rose-900 shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span><strong>Google Apps Script:</strong> {gasError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleTriggerSync}
+                  className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium cursor-pointer shadow-xs flex items-center gap-1 transition-colors"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Reintentar
+                </button>
+              </div>
+            )}
+
+            {isGasInitialLoading ? (
+              /* Indicador de carga (spinner) de la API de Google Apps Script */
+              <div className="py-20 text-center max-w-md mx-auto space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-sky-50 border border-sky-200 text-sky-600 flex items-center justify-center mx-auto shadow-2xs">
+                  <RefreshCw className="w-7 h-7 text-sky-600 animate-spin" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800">
+                    Cargando documentos desde la nube escolar...
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Consultando la API central de Google Apps Script para obtener los datos actualizados.
+                  </p>
+                </div>
+                <div className="w-48 mx-auto bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-sky-600 h-1.5 rounded-full w-2/3 animate-pulse"></div>
+                </div>
+              </div>
+            ) : filteredDocuments.length === 0 ? (
               /* Clean Empty State */
               <div className="py-16 text-center max-w-md mx-auto space-y-3">
                 <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
                   <FileQuestion className="w-7 h-7" />
                 </div>
                 <h3 className="text-base font-bold text-slate-800">
-                  No se encontraron documentos
+                  {documents.length === 0 ? 'No hay documentos en la nube escolar' : 'No se encontraron documentos'}
                 </h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  No hay archivos que coincidan con la combinación de filtros seleccionados (curso, grado, sección, formato o fecha).
+                  {documents.length === 0
+                    ? 'Aún no se han registrado documentos en el almacenamiento de Google Apps Script. Puedes subir tu primer documento institucional o cargar archivos de prueba.'
+                    : 'No hay archivos que coincidan con la combinación de filtros seleccionados (curso, grado, sección, formato o fecha).'}
                 </p>
-                <div className="pt-2 flex items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleResetFilters}
-                    className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
-                  >
-                    Restablecer Filtros
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingDoc(null);
-                      setIsUploadOpen(true);
-                    }}
-                    className="px-3.5 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-xs transition-colors flex items-center gap-1"
-                  >
-                    <UploadCloud className="w-3.5 h-3.5" />
-                    Subir Archivo
-                  </button>
+                <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+                  {documents.length === 0 ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleLoadSampleDocuments}
+                        className="px-3.5 py-1.5 text-xs font-semibold text-sky-800 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        Cargar Documentos de Prueba
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingDoc(null);
+                          setIsUploadOpen(true);
+                        }}
+                        className="px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-lg shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        Subir Primer Archivo
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleResetFilters}
+                        className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                      >
+                        Restablecer Filtros
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingDoc(null);
+                          setIsUploadOpen(true);
+                        }}
+                        className="px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-900 hover:bg-blue-800 rounded-lg shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        Subir Archivo
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ) : viewMode === 'grid' ? (

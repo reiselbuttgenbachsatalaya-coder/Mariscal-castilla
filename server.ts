@@ -922,6 +922,39 @@ async function startServer() {
     res.json({ success: true });
   });
 
+  // --- GOOGLE APPS SCRIPT API PROXY ---
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbzm5y5lTxQp8UnlzgmHdCAfLzKxTyBnMviiBRaWc53dE4O8xCDECOwqoFAleZjt4xkP/exec';
+  app.get('/api/gas-storage', async (req, res) => {
+    try {
+      const resp = await fetch(GAS_URL, { redirect: 'follow' });
+      const data = await resp.json();
+      res.json(data);
+    } catch (err: any) {
+      console.warn('Server proxy error GET gas-storage:', err);
+      res.status(502).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/gas-storage', async (req, res) => {
+    try {
+      const resp = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(req.body),
+        redirect: 'follow',
+      });
+      const text = await resp.text();
+      let data: any = { status: 'ok' };
+      try {
+        data = JSON.parse(text);
+      } catch {}
+      res.json(data);
+    } catch (err: any) {
+      console.warn('Server proxy error POST gas-storage:', err);
+      res.status(502).json({ error: err.message });
+    }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({

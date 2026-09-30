@@ -15,6 +15,7 @@ import {
   INITIAL_SCHEDULES,
   INITIAL_STORAGE_FOLDERS
 } from '../data/initialData';
+import { gasStorageService } from './gasStorageService';
 
 const KEYS = {
   DOCUMENTS: 'docudocente_documents_v1',
@@ -947,6 +948,24 @@ class StorageService {
     return res.success;
   }
 
+  // --- GOOGLE APPS SCRIPT SYNC ---
+  async syncWithGas(): Promise<{ documents: SchoolDocument[]; folders: StorageFolder[] }> {
+    const { documents, folders } = await gasStorageService.fetchDocumentsFromGas();
+    if (Array.isArray(documents)) {
+      localStorage.setItem(KEYS.DOCUMENTS, JSON.stringify(documents));
+    }
+    if (Array.isArray(folders) && folders.length > 0) {
+      localStorage.setItem(KEYS.STORAGE_FOLDERS, JSON.stringify(folders));
+    }
+    return { documents, folders };
+  }
+
+  async pushAllDataToGas(): Promise<{ success: boolean; status?: string }> {
+    const docs = this.getDocuments();
+    const folders = this.getStorageFolders();
+    return await gasStorageService.postAllDataToGas(docs, folders);
+  }
+
   // DOCUMENTS
   getDocuments(): SchoolDocument[] {
     try {
@@ -996,6 +1015,9 @@ class StorageService {
     cleanDocs.unshift(newDoc);
     localStorage.setItem(KEYS.DOCUMENTS, JSON.stringify(cleanDocs));
 
+    // Centralized Google Apps Script API sync
+    this.pushAllDataToGas().catch((e) => console.warn('Google Apps Script sync warning:', e));
+
     // Persist to server database for cross-device access
     try {
       fetch('/api/documents', {
@@ -1032,6 +1054,9 @@ class StorageService {
     documents[index] = updatedDoc;
     localStorage.setItem(KEYS.DOCUMENTS, JSON.stringify(documents));
 
+    // Centralized Google Apps Script API sync
+    this.pushAllDataToGas().catch((e) => console.warn('Google Apps Script sync warning:', e));
+
     // Persist update to server database
     try {
       fetch(`/api/documents/${id}`, {
@@ -1063,6 +1088,9 @@ class StorageService {
     const filtered = documents.filter(d => d.id !== id);
     localStorage.setItem(KEYS.DOCUMENTS, JSON.stringify(filtered));
 
+    // Centralized Google Apps Script API sync
+    this.pushAllDataToGas().catch((e) => console.warn('Google Apps Script sync warning:', e));
+
     // 3. Persist deletion to server database immediately
     try {
       fetch(`/api/documents/${encodeURIComponent(id)}`, {
@@ -1092,6 +1120,10 @@ class StorageService {
     doc.updatedAt = new Date().toISOString();
     documents[index] = doc;
     localStorage.setItem(KEYS.DOCUMENTS, JSON.stringify(documents));
+
+    // Centralized Google Apps Script API sync
+    this.pushAllDataToGas().catch((e) => console.warn('Google Apps Script sync warning:', e));
+
     return doc;
   }
 
@@ -1168,6 +1200,9 @@ class StorageService {
       details: `Se creó la carpeta "${newFolder.name}".`,
     });
 
+    // Centralized Google Apps Script API sync
+    this.pushAllDataToGas().catch((e) => console.warn('Google Apps Script sync warning:', e));
+
     return newFolder;
   }
 
@@ -1197,6 +1232,9 @@ class StorageService {
         localStorage.setItem(KEYS.DOCUMENTS, JSON.stringify(docs));
       }
     }
+
+    // Centralized Google Apps Script API sync
+    this.pushAllDataToGas().catch((e) => console.warn('Google Apps Script sync warning:', e));
 
     try {
       fetch(`/api/folders/${id}`, {
@@ -1232,6 +1270,9 @@ class StorageService {
     if (changed) {
       localStorage.setItem(KEYS.DOCUMENTS, JSON.stringify(docs));
     }
+
+    // Centralized Google Apps Script API sync
+    this.pushAllDataToGas().catch((e) => console.warn('Google Apps Script sync warning:', e));
 
     try {
       fetch(`/api/folders/${encodeURIComponent(id)}`, {

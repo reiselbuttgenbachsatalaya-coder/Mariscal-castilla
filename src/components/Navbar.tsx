@@ -18,7 +18,8 @@ import {
   ShieldCheck,
   Cake,
   Trash2,
-  UserMinus
+  UserMinus,
+  AlertCircle
 } from 'lucide-react';
 import { Teacher } from '../types';
 
@@ -31,7 +32,7 @@ interface NavbarProps {
   hasActiveFilters: boolean;
   onOpenUpload: () => void;
   onOpenScheduleModal: () => void;
-  onOpenCloudSync: () => void;
+  onOpenCloudSync?: () => void;
   currentTeacher: Teacher | null;
   allTeachers: Teacher[];
   dismissedSwitcherIds?: string[];
@@ -44,6 +45,7 @@ interface NavbarProps {
   onTriggerSync: () => void;
   isOffline: boolean;
   lastSyncedAt: string;
+  gasError?: string | null;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -68,6 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onTriggerSync,
   isOffline,
   lastSyncedAt,
+  gasError,
 }) => {
   const [showTeacherMenu, setShowTeacherMenu] = useState(false);
   const isDirector =
@@ -211,40 +214,37 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right Action Tools: Sync, Teacher Selector, Upload */}
           <div className="flex items-center gap-2 shrink-0">
             
-            {/* Cloud Sync Quick Pill */}
-            <div className="relative">
+            {/* Indicador de carga (spinner) cuando la API de Google Apps Script está sincronizando */}
+            {isSyncing && (
+              <div
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-sky-50 border border-sky-200 text-sky-800 animate-pulse shadow-2xs"
+                title="Sincronizando datos con Google Apps Script..."
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-sky-600 animate-spin" />
+                <span className="hidden sm:inline">Sincronizando...</span>
+              </div>
+            )}
+
+            {/* Indicador de error si la API de Google Apps Script falla */}
+            {gasError && !isSyncing && (
               <button
                 type="button"
-                onClick={onOpenCloudSync}
-                className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                  isOffline
-                    ? 'bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100'
-                    : isSyncing
-                    ? 'bg-sky-50 border-sky-300 text-blue-950 animate-pulse'
-                    : 'bg-sky-50 border-sky-200 text-sky-900 hover:bg-sky-100'
-                }`}
-                title="Estado de sincronización en la nube"
+                onClick={onTriggerSync}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer shadow-2xs"
+                title={`Error de sincronización con Google Apps Script: ${gasError}. Clic para reintentar.`}
               >
-                {isOffline ? (
-                  <CloudOff className="w-3.5 h-3.5 text-amber-600" />
-                ) : isSyncing ? (
-                  <RefreshCw className="w-3.5 h-3.5 text-sky-600 animate-spin" />
-                ) : (
-                  <Cloud className="w-3.5 h-3.5 text-sky-600" />
-                )}
-                <span className="hidden lg:inline font-semibold">
-                  {isOffline ? 'Sin Conexión' : isSyncing ? 'Sincronizando...' : 'Nube Activa'}
-                </span>
+                <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                <span className="hidden sm:inline">Error al sincronizar (Reintentar)</span>
               </button>
-            </div>
+            )}
 
-            {/* Quick sync action button */}
+            {/* Quick sync / refresh action button */}
             <button
               type="button"
               onClick={onTriggerSync}
-              disabled={isSyncing || isOffline}
+              disabled={isSyncing}
               className="p-2 text-slate-500 hover:text-blue-950 hover:bg-sky-50 rounded-lg transition-colors disabled:opacity-40 cursor-pointer"
-              title="Sincronizar cambios ahora"
+              title="Actualizar documentos desde Google Apps Script"
             >
               <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-sky-600' : ''}`} />
             </button>

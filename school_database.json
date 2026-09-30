@@ -30,7 +30,9 @@
       "previewSnippet": "I. Resuelva los siguientes sistemas de ecuaciones trigonométricas. 1) sen(2x) + cos(x) = 0...",
       "isFavorite": true,
       "smartCategory": "exam",
-      "syncStatus": "synced"
+      "syncStatus": "synced",
+      "folderId": "folder-evaluaciones",
+      "folderName": "Evaluaciones y Exámenes 2026"
     },
     {
       "id": "doc-2",
@@ -57,7 +59,9 @@
       "previewSnippet": "Competencia 1: Se comunica oralmente en su lengua materna. Desempeño: Expresa ideas con claridad adaptando el registro...",
       "isFavorite": true,
       "smartCategory": "curriculum",
-      "syncStatus": "synced"
+      "syncStatus": "synced",
+      "folderId": "folder-planeaciones",
+      "folderName": "Planificaciones y Malla Curricular"
     },
     {
       "id": "doc-3",
@@ -111,7 +115,9 @@
       "previewSnippet": "Objetivo de la sesión: Identificar los niveles tróficos en un microecosistema acuático simulado...",
       "isFavorite": true,
       "smartCategory": "material",
-      "syncStatus": "synced"
+      "syncStatus": "synced",
+      "folderId": "folder-guias",
+      "folderName": "Guías Didácticas y Laboratorio"
     },
     {
       "id": "doc-5",
