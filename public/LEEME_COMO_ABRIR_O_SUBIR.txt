@@ -1,0 +1,30 @@
+=============================================================================
+GUÍA RÁPIDA: CÓMO USAR LA PÁGINA WEB EN CUALQUIER COMPUTADORA O SERVIDOR
+I.E. Libertador Mariscal Castilla - Oxapampa (1954)
+=============================================================================
+
+OPCIÓN A: ABRIR DIRECTAMENTE EN TU COMPUTADORA (Sin instalar nada)
+-----------------------------------------------------------------
+1. Descomprime este archivo .ZIP en cualquier carpeta de tu PC.
+2. Haz doble clic en 'index.html'.
+3. Se abrirá inmediatamente en Google Chrome, Microsoft Edge o cualquier navegador.
+4. ¡Listo! Puedes guardar archivos, ver los horarios y utilizar la plataforma.
+
+OPCIÓN B: SUBIR A UN HOSTING GRATUITO EN INTERNET
+-------------------------------------------------
+Puedes tener tu página web en internet en 1 minuto sin pagar nada:
+1. NETLIFY (https://app.netlify.com/drop):
+   - Arrastra la carpeta descomprimida a la pantalla de Netlify y te dará un link web instantáneo.
+2. VERCEL (https://vercel.com/):
+   - Importa o sube la carpeta y tendrás tu dominio web activo.
+3. CPANEL / HOSTING ESCOLAR:
+   - Sube los archivos a la carpeta 'public_html' mediante el administrador de archivos.
+
+OPCIÓN C: SERVIDOR NODE.JS COMPLETO
+-----------------------------------
+Si deseas ejecutar con el backend Node.js en una laptop o servidor local:
+1. Abre una terminal en la carpeta descomprimida.
+2. Ejecuta:
+   npm install
+   npm run dev
+3. Abre http://localhost:3000 en tu navegador.

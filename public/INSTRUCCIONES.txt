@@ -1,0 +1,61 @@
+=========================================================================
+SISTEMA DE GESTIÓN ESCOLAR Y ARCHIVO DOCENTE
+PAQUETE DE GOOGLE APPS SCRIPT (BACKEND & BASE DE DATOS)
+=========================================================================
+
+CONTENIDO DEL PAQUETE:
+1. Codigo.gs         - Código principal con endpoints REST (doGet y doPost) y setup
+2. appsscript.json   - Manifiesto de configuración de la Web App en Google Apps Script
+3. INSTRUCCIONES.txt - Este manual de despliegue paso a paso
+
+-------------------------------------------------------------------------
+GUÍA RÁPIDA DE INSTALACIÓN Y PUESTA EN MARCHA (3 MINUTOS)
+-------------------------------------------------------------------------
+
+PASO 1: CREAR LA HOJA DE GOOGLE SHEETS
+1. Ingresa a tu navegador y ve a https://sheets.new (o crea una hoja de cálculo nueva en Google Drive).
+2. Nómbrala: "Base de Datos DocuDocente".
+
+PASO 2: ABRIR EL EDITOR DE GOOGLE APPS SCRIPT
+1. En el menú superior de tu hoja de cálculo, haz clic en:
+   Extensiones  ->  Apps Script
+2. Se abrirá una pestaña con el editor de código.
+
+PASO 3: PEGAR EL CÓDIGO
+1. En el archivo "Código.gs" que aparece por defecto, borra todo lo que haya.
+2. Abre el archivo "Codigo.gs" de este paquete, copia todo su contenido y pégalo en el editor.
+3. Haz clic en el ícono de Guardar (el disquete o Ctrl + S).
+
+PASO 4: CREAR AUTOMÁTICAMENTE LAS TABLAS
+1. En la barra superior del editor, busca el selector de funciones (donde dice "myFunction" o similar).
+2. Selecciona la función: "setupDatabase".
+3. Haz clic en el botón "Ejecutar".
+4. Google te pedirá autorizar permisos la primera vez:
+   - Haz clic en "Revisar permisos".
+   - Elige tu cuenta de Google.
+   - Haz clic en "Avanzado" (abajo a la izquierda).
+   - Haz clic en "Ir a Proyecto sin título (no seguro)".
+   - Haz clic en "Permitir".
+5. ¡Listo! Vuelve a tu hoja de Google Sheets y verás creadas las pestañas:
+   - "Docentes" (con usuario admin por defecto)
+   - "Documentos"
+   - "Carpetas"
+   - "Horarios"
+
+PASO 5: PUBLICAR LA APLICACIÓN WEB (API)
+1. En el editor de Apps Script, arriba a la derecha, haz clic en el botón azul "Implementar" -> "Nueva implementación".
+2. En la ventana que aparece, haz clic en el engranaje ⚙️ (al lado de "Seleccionar tipo") y elige "Aplicación web".
+3. Configura los siguientes campos:
+   - Descripción: "API DocuDocente v1"
+   - Ejecutar como: "Yo" (tu cuenta de correo)
+   - Quién tiene acceso: "Cualquier usuario" (Anyone)   <--- ¡MUY IMPORTANTE!
+4. Haz clic en "Implementar".
+5. Copia la "URL de la aplicación web" que termina en "/exec".
+   ¡Esa URL es tu endpoint para conectar cualquier aplicación web!
+
+-------------------------------------------------------------------------
+CREDICENCIALES INICIALES POR DEFECTO:
+- Usuario: admin
+- Contraseña: admin2026
+- Rol: Administradora / Dirección General
+=========================================================================

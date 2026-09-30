@@ -1,0 +1,28 @@
+=============================================================================
+GUÍA RÁPIDA: CÓMO EJECUTAR LA PÁGINA WEB EN GOOGLE APPS SCRIPT
+I.E. Libertador Mariscal Castilla - Oxapampa (1954)
+=============================================================================
+
+Google Apps Script te permite alojar esta página web GRATIS directamente en los
+servidores de Google, con su propio enlace web público (URL de Web App).
+
+PASO A PASO:
+------------
+1. Ve a https://script.google.com/ e inicia sesión con tu cuenta de Google.
+2. Haz clic en el botón superior izquierdo: "Nuevo proyecto".
+3. En el editor verás un archivo llamado 'Código.gs' (o 'Code.gs').
+   - Borra lo que tenga y PEGA todo el contenido del archivo 'Codigo.gs' que viene en este ZIP.
+4. En el menú de la izquierda, junto a "Archivos", haz clic en el símbolo '+' y selecciona "HTML".
+   - Nómbralo exactamente: Index
+   - El editor creará 'Index.html'.
+   - Borra lo que tenga y PEGA todo el contenido del archivo 'Index.html' que viene en este ZIP.
+5. Haz clic en el icono de guardar (el disquete) o presiona Ctrl+S.
+6. En la parte superior derecha, haz clic en el botón azul "Implementar" -> "Nueva implementación".
+7. Haz clic en el engranaje (⚙️) junto a "Seleccionar tipo" y elige "Aplicación web".
+8. Configura:
+   - Descripción: Archivo Docente Castilla 2026
+   - Ejecutar como: "Yo" (tu cuenta de correo)
+   - Quién tiene acceso: "Cualquier usuario" (Anyone)
+9. Haz clic en "Implementar" y autoriza los permisos si Google te lo solicita.
+10. ¡LISTO! Google te dará un enlace que termina en '/exec'. 
+    Ese enlace es tu página web funcionando en vivo en internet.

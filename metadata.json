@@ -1,0 +1,8 @@
+{
+  "name": "I.E. Libertador Mariscal Castilla - Archivo Docente",
+  "description": "Sistema institucional de gestión de archivos docentes, horarios de clase, carpetas y sincronización en la nube para la I.E. Libertador Mariscal Castilla de Oxapampa.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
